@@ -1,6 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+/* db */
+import { connectDB, disconnectDB } from './config/database.js';
+dotenv.config();
 
 const authRouter = await import('./routes/auth/auth.js')
 
@@ -15,6 +18,9 @@ app.get('/', (req, res) => {
 });
 
 app.use('/auth', authRouter.default);
+
+connectDB();
+
 app.listen(PORT, () => {
     console.log(`app running on: ${PORT}`);
 });
