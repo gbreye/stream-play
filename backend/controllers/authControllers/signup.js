@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt'
-import User from '.../models/User.js'
+import User from '../../models/User.js'
 
 async function createUser(req, res) {
     try {

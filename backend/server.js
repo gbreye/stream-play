@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import { connectDB, disconnectDB } from './config/database.js';
 dotenv.config();
 
-const authRouter = await import('./routes/auth/auth.js')
+const authRouter = await import('./routes/auth/auth.js');
 
 const app = express();
 const PORT = 3000
