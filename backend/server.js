@@ -1,12 +1,16 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-/* db */
-import { connectDB, disconnectDB } from './config/database.js';
 dotenv.config();
 
-const authRouter = await import('./routes/auth/auth.js');
+const SUPABASE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY
+const SUPABASE_URL = process.env.SUPABASE_URL
+/* db */
+import { connectDB, disconnectDB } from './config/database.js';
+import { createClient } from '@supabase/supabase-js'
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+const authRouter = await import('./routes/auth/auth.js');
 const app = express();
 const PORT = 3000
 

@@ -14,8 +14,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  playlist: [{
+    musics: [String]
+  }],
 });
 
 const User = mongoose.model("User", userSchema);
-
 export default User;
