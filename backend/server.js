@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 dotenv.config();
 
 const SUPABASE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY
