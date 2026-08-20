@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import User from "../../models/User.js";
 import jsonwebtoken from "jsonwebtoken";
 import fs from 'node:fs/promises';
+import createReadStream from 'node:fs';
 import {createClient} from "@supabase/supabase-js";
 dotenv.config();
 const SUPABASE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
@@ -9,9 +10,13 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const JWT_SECRET = process.env.JWT_SECRET;
 
-async function saveSong(req, res) {
-  return (saveSong.uploadSong(req, res), saveSong.removeSong(req, res));
-}
+class streamController {
+  constructor(uploadSong, removeSong, StreamSong) {
+    this.uploadSong = uploadSong;
+    this.removeSong = removeSong;
+    this.StreamSong = streamSong;
+  }
+};
 
 const stream = {
   uploadSong: async function (req, res) {
@@ -56,10 +61,12 @@ const stream = {
     if(error) return res.status(404).json({mes:'music not found!'});
     if(!data) return res.status(404).json({mes:"music not found"});
     try {
-        const fileBuffer = await fs.readFile(data);
-
+        const fileBuffer = await fs.createReadStream(data.path);
+        res.writeHeader('Content-Type', 'audio/mpeg');
+        fileBuffer.pipe(res);
     } catch (error) {
-
+        console.log("error", error);
+        return res.status(500).json({mes:"internal server error"});
     }
   },
   removeSong: async function (req, res) {
@@ -92,4 +99,4 @@ const stream = {
 
 
 
-export default stream;
+export default new streamController(stream.uploadSong, stream.removeSong, stream.streamSong);

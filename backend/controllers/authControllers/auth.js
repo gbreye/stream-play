@@ -6,6 +6,13 @@ dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+class auth {
+  constructor(login, signup) {
+    this.login = login;
+    this.signup = signup;
+  }
+}
+
 const authController = {
   login: async function (req, res) {
     try {
@@ -73,4 +80,4 @@ const authController = {
   },
 };
 
-export default authController;
+export default new auth(authController.login, authController.signup);
