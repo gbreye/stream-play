@@ -1,9 +1,9 @@
 import dotenv from "dotenv";
-dotenv.config();
-import User from "../../models/User";
-import { createClient } from "@supabase/supabase-js";
+import User from "../../models/User.js";
 import jsonwebtoken from "jsonwebtoken";
-import { search } from "moongose/routes";
+import fs from 'node:fs/promises';
+import {createClient} from "@supabase/supabase-js";
+dotenv.config();
 const SUPABASE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -13,7 +13,7 @@ async function saveSong(req, res) {
   return (saveSong.uploadSong(req, res), saveSong.removeSong(req, res));
 }
 
-const saveSong = {
+const stream = {
   uploadSong: async function (req, res) {
     const file = req.file;
     const name = req.body.name;
@@ -45,6 +45,23 @@ const saveSong = {
       return res.status(500).json({ mes: "" });
     }
   },
+  streamSong: async function(req, res) {
+    const name = req.body.name;
+    const token = req.cookies["token"];
+    if(!token) return res.status(401).json({mes:"not authorized"});
+    if(!name) return res.status(400).json({mes:"can not find null file!"});
+    const {data, error} = await supabase.storage
+        .from("music")
+        .upload(`public/${fileName}`);
+    if(error) return res.status(404).json({mes:'music not found!'});
+    if(!data) return res.status(404).json({mes:"music not found"});
+    try {
+        const fileBuffer = await fs.readFile(data);
+
+    } catch (error) {
+
+    }
+  },
   removeSong: async function (req, res) {
     const name = req.body.name;
     const index = req.body.index;
@@ -73,4 +90,6 @@ const saveSong = {
   },
 };
 
-export default saveSong;
+
+
+export default stream;
