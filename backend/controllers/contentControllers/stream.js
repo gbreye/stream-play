@@ -1,8 +1,7 @@
 import dotenv from "dotenv";
 import User from "../../models/User.js";
 import jsonwebtoken from "jsonwebtoken";
-import fs from 'node:fs/promises';
-import createReadStream from 'node:fs';
+import Readable from 'stream';
 import {createClient} from "@supabase/supabase-js";
 dotenv.config();
 const SUPABASE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
@@ -10,15 +9,32 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const JWT_SECRET = process.env.JWT_SECRET;
 
-class streamController {
-  constructor(uploadSong, removeSong, StreamSong) {
-    this.uploadSong = uploadSong;
-    this.removeSong = removeSong;
-    this.StreamSong = streamSong;
-  }
-};
-
 const stream = {
+  streamSong: async function(req, res) {
+    const name = req.body.name;
+    const token = req.cookies["token"];
+    if(!token) return res.status(401).json({mes:"not authorized"});
+    if(!name) return res.status(400).json({mes:"can not find null file!"});
+    const {data, error} = await supabase.storage
+        .from("music")
+        .createSignedUrl(`public/${name}`, 60);
+    if(error) return res.status(404).json({mes:'music not found!'});
+    if(!data) return res.status(404).json({mes:"music not found"});
+    try {
+      const webStream = await fetch(data.signedUrl);
+      if(!webStream.ok) {
+        return res.status(502).json({mes: "error!"})
+      }
+      const nodeStream = Readable.fromWeb(webStream.body);
+      nodeStream.pipe(res);
+      req.on("close", () => {
+        if(!res.writableEnded) nodeStream.destroy();
+      });
+    } catch (error) {
+      console.log("error", error);
+      return res.status(500).json({mes:"internal server error"});
+    }
+  },
   uploadSong: async function (req, res) {
     const file = req.file;
     const name = req.body.name;
@@ -27,10 +43,9 @@ const stream = {
     if (file.mimetype !== "audio/mpeg") {
       return res.status(400).json({ mes: "bad request!" });
     }
-    const fileName = name;
     const { data, error } = await supabase.storage
       .from("music")
-      .upload(`public/${fileName}`, file.buffer, {
+      .upload(`public/${name}`, file.buffer, {
         cacheControl: "3600",
         upsert: false,
         contentType: file.mimetype,
@@ -48,25 +63,6 @@ const stream = {
       return res.status(200).json({ mes: "music added!" });
     } catch (error) {
       return res.status(500).json({ mes: "" });
-    }
-  },
-  streamSong: async function(req, res) {
-    const name = req.body.name;
-    const token = req.cookies["token"];
-    if(!token) return res.status(401).json({mes:"not authorized"});
-    if(!name) return res.status(400).json({mes:"can not find null file!"});
-    const {data, error} = await supabase.storage
-        .from("music")
-        .upload(`public/${fileName}`);
-    if(error) return res.status(404).json({mes:'music not found!'});
-    if(!data) return res.status(404).json({mes:"music not found"});
-    try {
-        const fileBuffer = await fs.createReadStream(data.path);
-        res.writeHeader('Content-Type', 'audio/mpeg');
-        fileBuffer.pipe(res);
-    } catch (error) {
-        console.log("error", error);
-        return res.status(500).json({mes:"internal server error"});
     }
   },
   removeSong: async function (req, res) {
@@ -99,4 +95,4 @@ const stream = {
 
 
 
-export default new streamController(stream.uploadSong, stream.removeSong, stream.streamSong);
+export default stream;

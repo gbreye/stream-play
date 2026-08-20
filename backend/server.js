@@ -1,14 +1,17 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from "path";
 dotenv.config();
 
 
 /* db */
 import { connectDB, disconnectDB } from './config/database.js';
+import multer from 'multer';
 
 const authRouter = await import('./routes/auth/auth.js');
 const streamRouter = await import('./routes/stream/stream.js');
+
 const app = express();
 const PORT = 3000
 
