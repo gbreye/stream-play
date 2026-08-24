@@ -26,6 +26,7 @@ const stream = {
         return res.status(502).json({mes: "error!"})
       }
       const nodeStream = Readable.fromWeb(webStream.body);
+      res.setHeader('Content-Type', 'audio/mpeg');
       nodeStream.pipe(res);
       req.on("close", () => {
         if(!res.writableEnded) nodeStream.destroy();
@@ -40,6 +41,9 @@ const stream = {
     const name = req.body.name;
     const token = req.cookies["token"];
     if (!token) return res.status(401).json({ mes: "not authorized" });
+    if(!file) {
+      return res.status(400).json({mes: "bad request"});
+    }
     if (file.mimetype !== "audio/mpeg") {
       return res.status(400).json({ mes: "bad request!" });
     }
@@ -91,8 +95,32 @@ const stream = {
       return res.status(500).json({ mes: "internal server error" });
     }
   },
+  findSong: async function(req, res) {
+    const name = req.body.name;
+    if(!name) {
+      return res.status(400).json({mes:"bad request"});
+    }
+    const {data, error} = await supabase.storage
+    .from('music')
+    .list('public', {
+      limit: 100,
+      offset: 0,
+      sortBy: { column: 'name', order: 'asc' },
+    });
+
+    if(error) {
+      console.log('failed to fetch user data!', error);
+      return res.status(404).json({mes:"not found!"});
+    }
+    try {
+      res.setHeader('Content-Type', 'aplication/json');
+      res.json(data);
+    } catch(error) {
+      console.log('server error', error);
+      return res.status(500).json({mes:'internal server error'});
+    }
+  }
+  
 };
-
-
 
 export default stream;
