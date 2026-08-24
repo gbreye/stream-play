@@ -9,6 +9,8 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const JWT_SECRET = process.env.JWT_SECRET;
 
+//obejto de stream
+
 const stream = {
   streamSong: async function(req, res) {
     const name = req.body.name;
@@ -120,7 +122,7 @@ const stream = {
       return res.status(500).json({mes:'internal server error'});
     }
   }
-  
+
 };
 
 export default stream;
